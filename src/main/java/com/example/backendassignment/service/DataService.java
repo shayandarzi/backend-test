@@ -1,6 +1,7 @@
 package com.example.backendassignment.service;
 
 import com.example.backendassignment.entity.Data;
+import com.example.backendassignment.helper.DataCsvHelper;
 import com.example.backendassignment.repository.DataRepository;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -28,21 +29,9 @@ public class DataService {
 
 
     public void parseCsvFile(MultipartFile csvFile) {
-        CSVFormat csvFormat = CSVFormat.DEFAULT.builder()
-                .setDelimiter(',')
-                .setHeader()
-                .setSkipHeaderRecord(true)
-                .build();
-        SimpleDateFormat formatter = new SimpleDateFormat("dd-MM-yyyy");
-        try (BufferedReader fileReader = new BufferedReader(new InputStreamReader(csvFile.getInputStream(), StandardCharsets.UTF_8));
-             CSVParser csvParser = new CSVParser(fileReader, csvFormat)) {
-            Iterable<CSVRecord> csvRecords = csvParser.getRecords();
-            for (CSVRecord csvRecord : csvRecords) {
-                createData(csvRecord, formatter);
-            }
-        } catch (IOException e) {
-            throw new RuntimeException("failed to parse CSV file: " + e.getMessage());
-        }
+        DataCsvHelper dataCsvHelper = new DataCsvHelper();
+        List<Data> data = dataCsvHelper.readFile(csvFile);
+        dataRepository.saveAll(data);
     }
 
     private void createData(CSVRecord csvRecord, SimpleDateFormat formatter) {
